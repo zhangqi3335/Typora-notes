@@ -58,6 +58,164 @@ sudo usermod -aG dialout $USER
 .vmdk
 ```
 
+### 常用相关软件使用
+
+#### Putty
+
+作为对于没有桌面系统的server镜像来说非常好用
+
+先在虚拟机中输入 
+
+```
+ ip a  
+ //在ens33 或者 ens0 可以看见inet 后面跟着的就是虚拟机的ip地址
+```
+
+- putty中用鼠标右键就直接可以黏贴
+- 然后在putty中进行复制操作，就可以把拉动鼠标，光标圈住的内容直接就在复制框中，Ctrl+V就可以直接进行复制
+
+#### Winscp
+
+作为物理机和虚拟机之间的文件传输十分好用
+
+只需要先在虚拟机中输入 
+
+```
+ ip a  
+ //在ens33 或者 ens0 可以看见inet 后面跟着的就是虚拟机的ip地址
+```
+
+输入ip，用户名以及密码就可以直接进行文件传输了，记得保存可以保存用户名的密码，避免下次还要重新输入
+
+### 常用命令行操作
+
+##### 切换用户权限
+
+```
+sudo -i //切换为root
+
+```
+
+##### 查看系统版本
+
+方法一：
+
+```
+lsb_release -a
+```
+
+输出：
+
+```
+No LSB modules are available.
+Distributor ID:	Ubuntu
+Description:	Ubuntu 22.04.5 LTS
+Release:	22.04
+Codename:	jammy
+```
+
+方法二：
+
+```
+cat /etc/os-release
+```
+
+输出：
+
+方法三：
+
+```
+uname -a
+```
+
+输出：
+
+```
+Linux xiaozai-virtual-machine 6.8.0-90-generic #91~22.04.1-Ubuntu SMP PREEMPT_DYNAMIC Thu Nov 20 15:20:45 UTC 2 x86_64 x86_64 x86_64 GNU/Linux
+```
+
+
+
+##### 让虚拟机和物理机进行复制黏贴
+
+打开终端（快捷键：ctrl+Alt+T）：
+
+```
+sudo apt update //可以不输入
+sudo apt install -y open-vm-tools open-vm-tools-desktop //这个是重点
+```
+
+安装完成后：
+
+```
+reboot
+```
+
+开机检查是否成功
+
+```
+vmware-toolbox-cmd -v 
+//能输出版本号就成功
+```
+
+
+
+##### 开启ubuntu虚拟机的SSH服务
+
+```
+# 1. 更新软件源（确保安装最新版本，可选但建议执行）
+sudo apt update -y
+
+# 2. 安装openssh-server（核心依赖）
+sudo apt install -y openssh-server
+
+# 3. 启动SSH服务
+sudo systemctl start ssh
+
+# 4. 设置开机自启（避免重启虚拟机后服务失效）
+sudo systemctl enable ssh
+
+# 5. 关闭防火墙（实验环境推荐，避免拦截22端口）
+sudo ufw disable
+
+# 6. 检查SSH服务状态（确认运行）
+sudo systemctl status ssh
+```
+
+- 执行后若输出 `active (running)`，说明 SSH 服务正常启动；
+- 若提示 `ufw: command not found`，说明未安装防火墙，可忽略该命令。
+
+如果虚拟机版本为14.04及以下
+
+##### 低版本 Ubuntu（14.04/12.04）管理 SSH 服务的命令
+
+1. 安装 openssh-server（核心步骤不变）
+
+```bash
+sudo apt update -y
+sudo apt install -y openssh-server
+```
+
+2. 启动 SSH 服务（替换 systemctl）
+
+```bash
+sudo service ssh start
+```
+
+3. 设置开机自启（避免重启虚拟机后服务失效）
+
+```bash
+sudo update-rc.d ssh defaults
+```
+
+4. 检查 SSH 服务状态（确认运行）
+
+```bash
+sudo service ssh status
+```
+
+- 正常输出示例：`ssh start/running, process 1234`（显示 start/running 即启动成功）。
+
 ### Docker
 
 #### 使用【阿里云】Docker官方镜像
@@ -240,78 +398,5 @@ docker history ubuntu
 
 ```
 docker rmi ubuntu
-```
-
-
-
-### 常用命令行操作
-
-##### 切换用户权限
-
-```
-sudo -i //切换为root
-
-```
-
-##### 查看系统版本
-
-方法一：
-
-```
-lsb_release -a
-```
-
-输出：
-
-```
-No LSB modules are available.
-Distributor ID:	Ubuntu
-Description:	Ubuntu 22.04.5 LTS
-Release:	22.04
-Codename:	jammy
-```
-
-方法二：
-
-```
-cat /etc/os-release
-```
-
-输出：
-
-方法三：
-
-```
-uname -a
-```
-
-输出：
-
-```
-Linux xiaozai-virtual-machine 6.8.0-90-generic #91~22.04.1-Ubuntu SMP PREEMPT_DYNAMIC Thu Nov 20 15:20:45 UTC 2 x86_64 x86_64 x86_64 GNU/Linux
-```
-
-
-
-##### 让虚拟机和物理机进行复制黏贴
-
-打开终端（快捷键：ctrl+Alt+T）：
-
-```
-sudo apt update //可以不输入
-sudo apt install -y open-vm-tools open-vm-tools-desktop //这个是重点
-```
-
-安装完成后：
-
-```
-reboot
-```
-
-开机检查是否成功
-
-```
-vmware-toolbox-cmd -v 
-//能输出版本号就成功
 ```
 
