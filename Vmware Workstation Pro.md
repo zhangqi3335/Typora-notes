@@ -87,13 +87,25 @@ sudo usermod -aG dialout $USER
 
 输入ip，用户名以及密码就可以直接进行文件传输了，记得保存可以保存用户名的密码，避免下次还要重新输入
 
+**传递文件时权限不够：**
+
+![image-20251226210526043](C:\Users\17820\AppData\Roaming\Typora\typora-user-images\image-20251226210526043.png)
+
+```bash
+//使用时R必须大写
+sudo chmod -R 777 /usr/具体文件   
+```
+
+**`chmod`是用于更改文件或目录权限的命令。`-R`选项表示递归操作，即对目录及其所有子目录和文件都应用相同的权限更改。`777`代表所有用户（所有者、所属组和其他用户）对该文件夹都具有读、写和执行权限。**
+
+
+
 ### 常用命令行操作
 
 ##### 切换用户权限
 
-```
+```bash
 sudo -i //切换为root
-
 ```
 
 ##### 查看系统版本
@@ -106,7 +118,7 @@ lsb_release -a
 
 输出：
 
-```
+```bash
 No LSB modules are available.
 Distributor ID:	Ubuntu
 Description:	Ubuntu 22.04.5 LTS
@@ -116,7 +128,7 @@ Codename:	jammy
 
 方法二：
 
-```
+```bash
 cat /etc/os-release
 ```
 
@@ -133,6 +145,24 @@ uname -a
 ```
 Linux xiaozai-virtual-machine 6.8.0-90-generic #91~22.04.1-Ubuntu SMP PREEMPT_DYNAMIC Thu Nov 20 15:20:45 UTC 2 x86_64 x86_64 x86_64 GNU/Linux
 ```
+
+
+
+##### 查看虚拟机的IP地址
+
+**ip a    (ip addr)**：
+
+![image-20251226205844584](C:\Users\17820\AppData\Roaming\Typora\typora-user-images\image-20251226205844584.png)
+
+如果只想查看某个特定网络接口（如 `eth0` 或 `ens33` ）的 IP 地址，可以使用 `ip addr show dev <interface - name>` 。例如，要查看 `ens33` 接口的 IP 地址，输入 `ip addr show dev ens33` 。
+
+![image-20251226205945460](C:\Users\17820\AppData\Roaming\Typora\typora-user-images\image-20251226205945460.png)
+
+**hostname -I**：
+
+该命令会显示当前主机的所有 IP 地址，简单直接。在终端输入 `hostname -I` ，输出结果类似 `192.168.1.100 127.0.0.1` ，会列出所有网络接口的 IP 地址。
+
+![image-20251226210111091](C:\Users\17820\AppData\Roaming\Typora\typora-user-images\image-20251226210111091.png)
 
 
 
@@ -182,7 +212,7 @@ sudo ufw disable
 sudo systemctl status ssh
 ```
 
-- 执行后若输出 `active (running)`，说明 SSH 服务正常启动；
+- 执行后若输出 `active (running)`，说明 SSH 服务正常启动（按Q退出）；
 - 若提示 `ufw: command not found`，说明未安装防火墙，可忽略该命令。
 
 如果虚拟机版本为14.04及以下
