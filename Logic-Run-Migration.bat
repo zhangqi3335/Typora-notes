@@ -13,7 +13,7 @@ echo 如需实际执行，请编辑 .ps1 文件将 $DryRun 改为 $false
 echo.
 
 REM 使用 Bypass 策略运行脚本
-PowerShell.exe -NoProfile -ExecutionPolicy Bypass -File ".\Migrate-TyporaImages.ps1"
+PowerShell.exe -NoProfile -ExecutionPolicy Bypass -File ".\Logic-Migrate-TyporaImages.ps1"
 
 echo.
 pause

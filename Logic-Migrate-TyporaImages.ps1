@@ -1,6 +1,6 @@
 ﻿<#
 .SYNOPSIS
-    Typora 图片本地化迁移脚本
+    Typora 图片本地化迁移脚本 
 #>
 
 # ================= 配置区域 =================
@@ -15,12 +15,21 @@ $SourceImageDirBase = "C:\Users\17820\AppData\Roaming\Typora\typora-user-images"
 $TargetImageFolderName = "Image"
 
 # 是否为演示模式 (DryRun)
-# $true: 仅打印日志，不移动文件
+# $true: 仅打印日志，不移动文件，不修改 MD
 # $false: 实际执行
-$DryRun = $false
+$DryRun = $true
 
-# 日志文件路径
-$LogFile = Join-Path $RootDir ("Migration_Log_" + (Get-Date -Format "yyyyMMdd_HHmmss") + ".txt")
+# --- 日志配置修改 ---
+# 定义日志文件夹路径
+$LogDir = Join-Path $RootDir "Log"
+
+# 如果日志目录不存在，则创建
+if (-not (Test-Path $LogDir)) {
+    New-Item -ItemType Directory -Path $LogDir -Force | Out-Null
+}
+
+# 日志文件路径 (现在位于 Log 文件夹内)
+$LogFile = Join-Path $LogDir ("Migration_Log_" + (Get-Date -Format "yyyyMMdd_HHmmss") + ".txt")
 
 # ================= 辅助函数 =================
 
@@ -46,22 +55,17 @@ function Get-RelativePath {
     return $relativePath
 }
 
-function Backup-File {
-    param([string]$Path)
-    $backupPath = "$Path.bak"
-    if (-not (Test-Path $backupPath)) {
-        Copy-Item -LiteralPath $Path -Destination $backupPath
-        Write-Log "已备份: $backupPath" -Level "DEBUG" -Color DarkGray
-    }
-}
+# [已删除] Backup-File 函数
 
 # ================= 主逻辑 =================
 
 try {
+    # 开启控制台转录，记录屏幕上所有的输出到文件
     Start-Transcript -Path "$LogFile.console.txt" -Append -Force | Out-Null
     
     Write-Log "=== 开始 Typora 图片迁移任务 ===" -Color Cyan
     Write-Log "根目录: $RootDir"
+    Write-Log "日志目录: $LogDir"
     Write-Log "源图片目录: $SourceImageDirBase"
     Write-Log "模式: $(if($DryRun){'演示 (DryRun)'} else {'实际执行 (Apply)'})" -Color Yellow
 
@@ -89,7 +93,7 @@ try {
             foreach ($match in $matches) {
                 $originalPath = $match.Groups[1].Value
                 
-                # [FIXED] 使用 System.Uri 替代 System.Web.HttpUtility，避免找不到类型错误
+                # 使用 System.Uri 解码路径
                 $decodedPath = [System.Uri]::UnescapeDataString($originalPath)
                 
                 $isTarget = $false
@@ -142,7 +146,7 @@ try {
         }
 
         if ($hasChange -and (-not $DryRun)) {
-            Backup-File -Path $file.FullName
+            # [已修改] 直接覆盖写入原文件，不再生成 .bak 备份
             [System.IO.File]::WriteAllText($file.FullName, $newContent, [System.Text.Encoding]::UTF8)
             Write-Log "  -> MD 文件已更新并保存" -Color Magenta
         }
