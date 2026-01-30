@@ -17,7 +17,7 @@ $TargetImageFolderName = "Image"
 # 是否为演示模式 (DryRun)
 # $true: 仅打印日志，不移动文件，不修改 MD
 # $false: 实际执行
-$DryRun = $true
+$DryRun = $false
 
 # --- 日志配置修改 ---
 # 定义日志文件夹路径
