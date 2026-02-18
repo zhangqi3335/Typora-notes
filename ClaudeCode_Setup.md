@@ -1,4 +1,4 @@
-这份笔记综合了之前关于 **在 Windows 上通过 WSL (Linux 子系统) 安装 Claude Code** 的所有对话，特别针对**将系统安装在 E 盘**以节省 C 盘空间的需求，整理了一套完整的“最佳实践”流程。
+﻿这份笔记综合了之前关于 **在 Windows 上通过 WSL (Linux 子系统) 安装 Claude Code** 的所有对话，特别针对**将系统安装在 E 盘**以节省 C 盘空间的需求，整理了一套完整的“最佳实践”流程。
 
 您可以直接复制保存为 Markdown 文件（例如 `ClaudeCode_Setup.md`）。
 
@@ -119,6 +119,70 @@
     *   首次运行会提示你进行认证。
     *   按回车键打开浏览器 -> 登录 Anthropic 账号 -> 授权 -> 完成。
 
+## 错误信息 `Connection refused`
+
+这是一个非常典型的网络问题。错误信息 `Connection refused` 告诉你：**你的 WSL 无法连接到 GitHub 的服务器**（`raw.githubusercontent.com` 在国内是被墙的）。
+
+不用担心，我们只需要换一个**国内的镜像源**来安装即可。请依次执行以下步骤：
+
+### 第一步：使用国内镜像安装 nvm
+
+请复制下面这一整行命令（这是一个专门为国内用户优化的安装脚本，使用了 Gitee/快吉客 的镜像），在你的终端里粘贴并回车：
+
+```bash
+bash -c "$(curl -fsSL https://gitee.com/RubyMetric/nvm-cn/raw/main/install.sh)"
+```
+
+*   *解释：这个脚本会自动帮你从国内服务器下载 nvm，并且自动配置好速度最快的下载源。*
+
+### 第二步：让配置立即生效
+
+安装完成后，你需要让终端知道 nvm 已经装好了。输入下面这行命令：
+
+```bash
+source ~/.bashrc
+```
+
+### 第三步：验证安装
+
+输入下面命令，如果显示出版本号（例如 `0.39.x`），说明 nvm 安装成功了：
+
+```bash
+nvm -v
+```
+
+---
+
+### 第四步：安装 Node.js（关键一步）
+
+虽然 nvm 装好了，但**下载 Node.js 本体时可能还会卡住**。为了防止卡住，请使用下面这条**带有国内镜像加速**的命令来安装 Node.js：
+
+```bash
+# 临时指定淘宝镜像源来下载 Node.js LTS 版本
+NVM_NODEJS_ORG_MIRROR=https://npmmirror.com/mirrors/node nvm install --lts
+```
+
+### 第五步：安装 Claude Code
+
+Node.js 装好后，最后安装 Claude Code。同样，为了防止下载慢，我们先设置 npm 的国内镜像，再安装：
+
+1.  **设置 npm 国内镜像（永久加速）：**
+    ```bash
+    npm config set registry https://registry.npmmirror.com
+    ```
+
+2.  **安装 Claude Code：**
+    ```bash
+    npm install -g @anthropic-ai/claude-code
+    ```
+
+3.  **启动：**
+    ```bash
+    claude
+    ```
+
+**总结一下，你刚才遇到的问题只是因为那堵“墙”，换成国内的搬运工（镜像）就解决了！试试看吧。**
+
 ---
 
 ## 📝 以后考虑的笔记 (FAQ & 维护)
@@ -154,6 +218,149 @@
 *   访问 E 盘：`cd /mnt/e`
 *   *建议*：尽量把代码放在 Ubuntu 的自己的目录下（例如 `~/project`），文件读写速度比在 `/mnt/` 下快得多。
 
-### 5. 潜在影响
+
+
+### 5. 为什么显示 `/mnt/c`？
+
+*   **这是“当前位置”，不是“安装位置”：**
+    Linux 启动时，默认会自动进入你在 Windows 里的用户目录（也就是 `C:\Users\17820`）。
+*   **WSL 的挂载机制：**
+    在 Linux 里，Windows 的硬盘是被“挂载”进来的。
+    *   `/mnt/c` = Windows 的 **C 盘**
+    *   `/mnt/e` = Windows 的 **E 盘**
+    *   `/` (根目录) = **Linux 系统本身** (这才是你安装在 E 盘的那个大文件)
+
+你看到的提示符 `...:/mnt/c/Users/17820$` 只是告诉你：“我现在正在操作 Windows C 盘里的文件”，并不代表 Linux 系统安装在 C 盘。
+
+---
+
+### 6. 如何验证真的迁移到了 E 盘？
+
+请执行以下两个检查，确认你的搬家是否成功：
+
+#### 检查一：去 E 盘看一眼 (最直观)
+
+1.  打开 Windows 的**文件资源管理器**。
+2.  进入你之前设置的路径：**`E:\WSL\Ubuntu`** (或者你设置的其他路径)。
+3.  看有没有一个很大的文件叫 **`ext4.vhdx`**？
+    *   如果有，而且大小有几百兆或几个 G，**恭喜你，你的 Linux 系统就在这里！** 以后你在 Linux 里装的所有软件（包括 Claude Code），都会写入到这个 E 盘的文件里。
+
+#### 检查二：去 C 盘确认已删除
+
+1.  去默认安装路径看看：`C:\Users\17820\AppData\Local\Packages\`。
+2.  搜一下有没有 `CanonicalGroupLimited.Ubuntu...` 这样的文件夹。
+3.  如果没有，或者里面是空的，说明 C 盘的空间已经释放干净了。
+
+---
+
+### 7. 如何回到“真正的 Linux 内部”？
+
+为了让 Claude Code 运行更快，同时也为了让你感觉“我确实是在 Linux 里”，请在终端输入：
+
+```bash
+cd ~
+```
+
+*(注意：波浪号 `~` 代表 Linux 的“家”目录)*
+
+回车后，你的提示符会变成：
+`xiaozai@...:~$`  (蓝色波浪号)
+
+这时候输入 `pwd` (查看当前路径)，它会显示：
+`/home/xiaozai`
+
+**这个 `/home/xiaozai` 目录，物理上就存储在你的 `E:\WSL\Ubuntu\ext4.vhdx` 文件里。**
+
+### 8.无法连接到Anthropic服务
+
+![image-20260218174016968](Image/ClaudeCode_Setup/image-20260218174016968.png)
+
+这是一个非常非常经典的问题！千万不要觉得自己操作错了，而是 **WSL 2 的机制导致的**。
+
+简单来说：**你在 Windows 上开了“魔法”，默认情况下 WSL 2 是蹭不到的。**
+
+### 核心原因解释（为什么开了没用？）
+WSL 2 其实是运行在 Hyper-V 里的一个**完整的虚拟机**。
+*   **Windows** 是宿主机（房东）。
+*   **Ubuntu (WSL)** 是虚拟机（租客）。
+*   你的“魔法”软件运行在 Windows 上，它接管了 Windows 的网卡。
+*   但是，**WSL 有自己独立的虚拟网卡**。默认情况下，WSL 的流量是直接穿过 Windows 出去的，**它没有走你的“魔法”通道**。
+
+---
+
+### ✅ 解决方法（让 WSL 走 Windows 的代理）
+
+你需要做两件事：
+1.  **在 Windows 的魔法软件里设置“允许局域网连接”**。
+2.  **在 WSL 里输入命令，告诉它代理服务器在哪里**。
+
+#### 第一步：设置 Windows 端的魔法软件
+1.  打开你的魔法软件（Clash, v2rayN 等）。
+2.  找到 **“允许局域网连接” (Allow LAN)** 这个选项，把它**开启**。
+3.  查看你的 **端口号**（通常 HTTP/HTTPS 端口是 `7890`，或者是 `10809` 等，取决于你的软件设置）。我们假设是 **7890**（如果是其他的请自行替换）。
+
+#### 第二步：在 WSL (Ubuntu) 里执行代理命令
+请在你的黑色终端窗口里，**依次复制并执行**下面的命令（注意替换端口号）：
+
+1.  **获取 Windows 的 IP 地址并设置代理**（直接复制这整段代码）：
+    ```bash
+    # 自动获取宿主机 IP
+    host_ip=$(cat /etc/resolv.conf |grep "nameserver" |cut -f 2 -d " ")
+    
+    # 设置代理 (假设你的端口是 7890，如果不是请修改下面的数字！)
+    export https_proxy="http://${host_ip}:7890"
+    export http_proxy="http://${host_ip}:7890"
+    export all_proxy="socks5://${host_ip}:7890"
+    
+    # 打印出来看看对不对
+    echo "Current Proxy: $https_proxy"
+    ```
+
+2.  **测试一下通不通**：
+    输入下面命令，看看能不能连接 Google：
+    ```bash
+    curl -I https://www.google.com
+    ```
+    *   如果显示 `HTTP/1.1 200 OK` 或者 `301 Moved`，说明**通了！**
+    *   如果还是卡住或报错，说明端口号填错了，或者防火墙挡住了。
+
+#### 第三步：再次运行 Claude
+现在网络通了，再次尝试运行：
+```bash
+claude
+```
+这次应该就能连接上 `api.anthropic.com` 了。
+
+---
+
+### 💡 进阶：如何永久生效？
+上面的命令关掉窗口就失效了。如果你想每次打开终端自动连代理，请把配置写入文件：
+
+1.  打开配置文件：
+    ```bash
+    nano ~/.bashrc
+    ```
+2.  滚动到最下面，粘贴这段代码（记得改端口 `7890` 为你实际的端口）：
+    ```bash
+    # 获取 Windows IP
+    host_ip=$(cat /etc/resolv.conf |grep "nameserver" |cut -f 2 -d " ")
+    # 设置代理
+    export https_proxy="http://${host_ip}:7890"
+    export http_proxy="http://${host_ip}:7890"
+    export all_proxy="socks5://${host_ip}:7890"
+    ```
+3.  按 `Ctrl + O` 保存，回车，然后 `Ctrl + X` 退出。
+4.  刷新配置：
+    ```bash
+    source ~/.bashrc
+    ```
+
+---
+
+### 总结
+你之前的 frustration (挫败感) 是因为 WSL 和 Windows 是两台机器。**你给 Windows 穿了“防弹衣”，但 WSL 还是“裸奔”的**。按照上面的步骤，把 WSL 拉进“防弹衣”里就好了！
+
+### 9. 潜在影响
+
 *   **Hyper-V**：WSL 2 依赖 Hyper-V 虚拟化。如果你还在使用非常老旧的安卓模拟器（如旧版雷电、MuMu），可能会有冲突。解决方法是更新模拟器到最新版（大多数现代模拟器已兼容 Hyper-V）。
 *   **性能**：不运行时不占用资源。运行时占用少量内存。
